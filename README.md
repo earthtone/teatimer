@@ -1,6 +1,6 @@
-#grunt2015
+#Simpl Tea Timer
 =========
-##Grunt/Babel Boilerplate for Front-End Web Projects
+##Grunt/Babel Project
 
 ### dependencies:
 - Node
