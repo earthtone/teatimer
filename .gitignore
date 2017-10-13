@@ -1,6 +1,5 @@
 .DS_Store
-.tmp/*
-node_modules/*
-bower_components/*
-dist/*
+.tmp/
+node_modules/
+alarm.wav
 

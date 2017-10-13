@@ -1,0 +1,138 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Tea Timer</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+		<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css"> 	
+		<style>
+			header {
+				border-bottom: 1px solid #ddd;
+				padding: 1em;
+			}
+
+			main {
+				display: flex;
+				flex-direction: column;
+				width: 100vw;
+				height: 90vh;
+				align-items: center;
+				justify-content: center;
+			}
+
+			h1 {
+				font-size: 108px;
+			}
+
+			input {
+				margin-bottom: 0.5em;
+			}
+
+			input:focus{
+				outline: none;
+			}
+
+			.btn-grp {
+				align-self: flex-start;
+			}
+
+			#tea-type__list {
+				padding: 0;
+				margin: 0;
+				list-style: none;
+				display: flex;
+				justify-content: space-around;
+			}
+
+			#tea-type__item {
+				margin: 0.5em;
+			}
+		</style>
+	</head>
+	<body>
+		<header>
+			<nav id="tea-types">
+				<ul id="tea-type__list">
+					<li class="tea-type__item" data-min="2">White</li>
+					<li class="tea-type__item" data-min="3">Green</li>
+					<li class="tea-type__item" data-min="4">Black</li>
+					<li class="tea-type__item" data-min="3">Darjeeling</li>
+					<li class="tea-type__item" data-min="4">Oolong</li>
+					<li class="tea-type__item" data-min="4">Pu-Erh</li>
+				</ul>
+			</nav>
+		</header>
+		
+		<main class="w3-container">
+				<h1 id="time-left">00:00</h1>	
+			  <input id="inputBx" class="w3-input" type="text" placeholder="How many minutes?">
+				<div class="btn-grp">
+					<button id="startBtn" class="w3-btn w3-green" type="button">Start</button>
+				  <button id="stopBtn" class="w3-btn w3-red" type="button">Stop</button>
+				  <button id="showChart" class="w3-btn w3-blue">Chart</button>	
+				</div>
+		</main>
+
+		<audio src="../alarm.wav"></audio>
+		<script>
+			const Events = require('events');
+			const bus = new Events.EventEmitter();
+
+			const ipc = require('electron').ipcRenderer;
+			const timer = require('./lib/timer');
+
+			var alert, playing = false;
+			
+			document.querySelector('#startBtn').addEventListener('click', e => {
+				e.preventDefault();
+
+				var min = parseInt(document.querySelector('#inputBx').value) * 60,
+					$el = document.querySelector('#time-left');
+
+				timer(min, $el, bus);
+				document.querySelector('#inputBx').value = '';
+			});
+
+			document.querySelector('#stopBtn').addEventListener('click', e => {
+				e.preventDefault();
+				bus.emit('stop-timer');
+				document.querySelector('#time-left').textContent = '00:00';
+				if(playing){
+					stop();
+				}
+			});
+
+			document.querySelector('#showChart').addEventListener('click', e => {
+				e.preventDefault();
+				ipc.send('show-chart');
+			});
+
+			document.querySelectorAll('.tea-type__item').forEach(item => {
+				item.addEventListener('click', function(e){
+					document.querySelector('#inputBx').value = this.dataset.min;
+				});
+			});
+
+			bus.on('timer-done', function(){
+				alert = setInterval(function(){
+					document.querySelector('main').classList.toggle('w3-red');	
+				}, 500);
+
+				setTimeout(function(){
+					stop();
+				}, 30000);
+
+				document.querySelector('audio').play();
+				playing = true;
+			});
+
+			function stop(){
+				clearInterval(alert);
+				document.querySelector('audio').pause();
+				document.querySelector('main').classList.remove('w3-red');
+				playing = false;
+			}
+
+		</script>
+	</body>
+</html>
